@@ -11,13 +11,13 @@ a) To create the wing you have to run the macro mkRibAutoStrt9.FCMacro in freeca
 b) use the latest FreeCAD development version. 
 With the version 0.22.0dev I was able to run all the macros, although the version seems to crash now and then.
 OS: Debian GNU/Linux 12 (bookworm) (GNOME/gnome)
-Word size of FreeCAD: 64-bit
-Version: 0.22.0dev.38553 (Git) AppImage
-Build type: Release
-Branch: main
-Hash: 59c1ccec3e6b70f56eeee8f94d361019b84bd850
-Python 3.11.9, Qt 5.15.13, Coin 4.0.2, Vtk 9.2.6, OCC 7.7.2
-Locale: English/United Kingdom (en_GB)
+Word size of FreeCAD: 64-bit  
+Version: 0.22.0dev.38553 (Git) AppImage  
+Build type: Release 
+Branch: main  
+Hash: 59c1ccec3e6b70f56eeee8f94d361019b84bd850   
+Python 3.11.9, Qt 5.15.13, Coin 4.0.2, Vtk 9.2.6, OCC 7.7.2  
+Locale: English/United Kingdom (en_GB)   
 
 
 
@@ -44,3 +44,8 @@ Thus the sequence to generate a wing and a drawing is:
   set kB to -1 and run prnObj9. This will generate a page
   containing all ribs that had a number assigned to them
   in the copy of the object file.
+
+
+Happy Modeling Everyone!
+
+Juergen
