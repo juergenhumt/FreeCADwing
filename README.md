@@ -5,6 +5,7 @@ FreeCADwing is a sequence of macros for FreeCAD that allow you to generate a tap
 First define the wing geometry in file wDat19928.lis (the filename is, of course, arbitrary), it contains the data for both the inner and outer wing section. Line 0, the first line, is no longer used. Outer wing data start in line 8, after the first nRig.
 
 First some remarks concerning different FreeCAD versions. Currently there seem to be two options:
+
 a) To create the wing you have to run the macro mkRibAutoStrt9.FCMacro in freecad 18 because in higher versions, 19 through 21, the loft for the outer wing is not created, which in #18 works like a charm. This is quite annoying! Also all FreeCAD 18.x AppImages for me did not run in Debian 12 bookworm. My work around was to install the Windows version of FreeCAD 18.0 under wine. You can not work with the program, since the graphic window is blocked but you can run the mkRibAutoStrt9.FCMacro. The wing is generated all right. You can save the file, load it in e.g. FreeCAD 21 and proceed by runnig the other macros. 
 
 b) use the latest FreeCAD development version. 
