@@ -1,4 +1,4 @@
-
+FreeCADwing is an open source software distributed under GPL v3. Read inside the files or read the GPL file which you find in the project.
 
 FreeCADwing is a sequence of macros for FreeCAD that allow you to generate a tapered wing, the wing ribs and place the ribs in a drawing which you can export as an svg file to create e.g. the input for a laser cutter. You have to recolour the rib edges manually to red RGB = [255,0,0] for a laser cutter
 
