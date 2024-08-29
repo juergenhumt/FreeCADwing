@@ -1,0 +1,50 @@
+# Copyright 2024 Juergen Humt
+# 
+# This file is part of FreeCADwing.
+# 
+#
+#     FreeCADwing, is free  software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by the 
+#     Free Software Foundation, either version 3 of the License or any later 
+#     version.
+# 
+#     FreeCADwing is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License along 
+#     with FreeCADwing.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# -*- coding: utf-8 -*-
+
+# Macro to modify the X position of views on a drawin
+# The view labels are View, View001, View002...
+#
+import FreeCAD
+import DraftTools
+import Draft
+
+docName = 'SDtwinMplWng4'
+
+vNm = 'View'
+vNz = ''
+vNk = 'View'
+
+nEnd = 16 # since view #2 is View001 nEnd is the number of views +2
+for k in range(1,nEnd):
+  if k > 9:
+    vNz = '0'
+  else:
+    vNz = '00'
+
+  # get current X position
+  xPos = FreeCAD.getDocument(docName).getObject(vNk).X.Value
+
+  # position is modified below
+  FreeCAD.getDocument(docName).getObject(vNk).X.Value = xPos - 15.0
+
+  # print(vNk + "    " + str(xPos))
+  vNk = vNm + vNz + str(k)
+ 

@@ -1,0 +1,120 @@
+# Copyright 2024 Juergen Humt
+# 
+# This file is part of FreeCADwing.
+# 
+#
+#     FreeCADwing, is free  software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by the 
+#     Free Software Foundation, either version 3 of the License or any later 
+#     version.
+# 
+#     FreeCADwing is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License along 
+#     with FreeCADwing.  If not, see <http://www.gnu.org/licenses/>.
+
+import FreeCAD
+from FreeCAD import Base
+import Draft
+import Part
+import importAirfoilDAT
+from utilFCD2 import splitStr
+from utilFCD2 import rdWngDat
+
+
+for jTst in range(2):
+	flName = '/home/jhumt/.FreeCAD/Macro/wDat19928.lis'
+	wDat = rdWngDat(flName, jTst)
+	
+	bLocInr = wDat[0]# 0=inr wng  1=outer wing
+	wSpan = wDat[1]  # 650          650 
+	zInr  = wDat[2]  # 0.0          280
+	zOut  = wDat[3]  # 280          650
+	scFi  = wDat[4]  # 150
+	scFo  = wDat[5]
+
+
+	if (jTst == 0):
+		oF = open('out.lis','w')
+		oF.write('bLocInr ' + str(bLocInr) +'\n') 
+		oF.write('wSpan   ' + str(wSpan  ) +'\n')
+		oF.write('zInr    ' + str(zInr   ) +'\n')
+		oF.write('zOut    ' + str(zOut   ) +'\n')
+		oF.write('scFi    ' + str(scFi   ) +'\n')
+		oF.write('scFo    ' + str(scFo   ) +'\n')
+		
+		oF.flush()
+		
+		# App.newDocument("Unnamed")
+		App.setActiveDocument("Unnamed")
+		App.ActiveDocument=App.getDocument("Unnamed")
+		Gui.ActiveDocument=Gui.getDocument("Unnamed")
+		Gui.activeDocument().activeView().viewDefaultOrientation()
+		importAirfoilDAT.insert(u"/home/jhumt/Flight/RotorCraft/Profiles/profile_SD7062-il.dat","Unnamed")
+		sFo =  App.ActiveDocument.getObject("Wire")
+		
+		oF.write(str(sFo))
+		oF.write('\n\n')
+		
+
+		if "Placement" in sFo.PropertiesList:
+			sfpl = sFo.Placement
+		sfpl_Points = sFo.Points
+		sfpl_closed = sFo.Closed
+		
+		oF.write('Points\n')
+		oF.write(str(sfpl_Points))
+		
+		bs1 = Draft.makeBSpline(sfpl_Points)
+		cS2a1 = ""
+		cS2a2 = "001"
+
+		importAirfoilDAT.insert(u"/home/jhumt/Flight/RotorCraft/Profiles/profile_SD7032-099-88.dat","Unnamed")
+		sFo1 =  App.ActiveDocument.getObject("Wire001")
+
+		if "Placement" in sFo1.PropertiesList:
+			sfpl = sFo1.Placement
+		sfpl_Points = sFo1.Points
+		sfpl_closed = sFo1.Closed
+				
+		bs2 = Draft.makeBSpline(sfpl_Points)
+		k=0
+	else:
+		cS2a1 = "002"
+		cS2a2 = "003"
+	
+	if (jTst==0):
+		bs1 = FreeCAD.getDocument("Unnamed").getObject("BSpline")
+	else:
+		bs1 = FreeCAD.getDocument("Unnamed").getObject("BSpline001")
+	
+	cS2_ = "Clone2D"
+	cS21 = cS2_ + cS2a1
+	cS22 = cS2_ + cS2a2
+	
+	
+	
+	Gui.activateWorkbench("DraftWorkbench")
+	Draft.clone(bs1)
+	FreeCAD.getDocument("Unnamed").getObject(cS21).Placement = App.Placement(App.Vector(0,0,zInr),App.Rotation(App.Vector(0,0,1),0))
+	FreeCAD.getDocument("Unnamed").getObject(cS21).Scale = (scFi, scFi, 1.00)
+	
+	bs2 = FreeCAD.getDocument("Unnamed").getObject("BSpline001")
+
+	Draft.clone(bs2)
+	FreeCAD.getDocument("Unnamed").getObject(cS22).Placement = App.Placement(App.Vector(0,0,zOut),App.Rotation(App.Vector(0,0,1),0))
+	FreeCAD.getDocument("Unnamed").getObject(cS22).Scale = (scFo, scFo, 1.00)
+	
+	
+	#Gui.SendMsgToActiveView("ViewFit")
+	App.getDocument('Unnamed').addObject('Part::Loft','Loft')
+	exec("App.getDocument('Unnamed').ActiveObject.Sections=[App.getDocument('Unnamed')." + cS21 + ", App.getDocument('Unnamed')." + cS22 + ", ]")
+	App.getDocument('Unnamed').ActiveObject.Solid=True
+	App.getDocument('Unnamed').ActiveObject.Ruled=False
+	App.getDocument('Unnamed').ActiveObject.Closed=False
+	App.ActiveDocument.recompute()
+
+k=0

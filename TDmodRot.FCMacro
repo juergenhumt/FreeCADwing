@@ -1,0 +1,44 @@
+# Copyright 2024 Juergen Humt
+# 
+# This file is part of FreeCADwing.
+# 
+#
+#     FreeCADwing, is free  software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by the 
+#     Free Software Foundation, either version 3 of the License or any later 
+#     version.
+# 
+#     FreeCADwing is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License along 
+#     with FreeCADwing.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# -*- coding: utf-8 -*-
+
+# Macro to rotate views in a drawing setting:
+#  Direction  = (0, 0, 1) and
+# XDirection  = (0, 0, 1)
+#  will create a view along the Z axis where
+#  the X axis is parallel to the upper edge 
+#  of the drawing
+#  
+#
+
+import FreeCAD
+import DraftTools
+import Draft
+
+docName = 'SD7034_wng9_drw'
+
+vNm = 'View00'
+for k in range(1,15):
+  if k > 9:
+    vNm = 'View0'
+
+  vNk = vNm + str(k)
+  FreeCAD.getDocument(docName).getObject(vNk).Direction  = (0, 0, 1)
+  FreeCAD.getDocument(docName).getObject(vNk).XDirection = (0, 0, 1)

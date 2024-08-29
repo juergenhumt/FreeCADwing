@@ -1,0 +1,127 @@
+# Copyright 2024 Juergen Humt
+# 
+# This file is part of FreeCADwing.
+# 
+#
+#     FreeCADwing, is free  software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by the 
+#     Free Software Foundation, either version 3 of the License or any later 
+#     version.
+# 
+#     FreeCADwing is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License along 
+#     with FreeCADwing.  If not, see <http://www.gnu.org/licenses/>.
+
+# -*- coding: utf-8 -*-
+
+import FreeCAD
+import DraftTools
+import Draft
+import Part
+from utilFCD2 import rdWngDat
+
+
+flName = '/home/jhumt/.FreeCAD/Macro/wDat19928.lis'
+oF = open('out.lis','w')
+
+
+for jB in range(2):   # jB =0 -> inner wing     jB =1 ->outer wing
+
+  if (jB==0):
+    pl = FreeCAD.Placement()
+    pl.Rotation.Q = (0.0,0.0,0.0,1.0)
+    pl.Base = FreeCAD.Vector(-10.0,-15.0,0.0)
+    rec = Draft.makeRectangle(length=220.0,height=60.0,placement=pl,face=False,support=None)
+    Draft.autogroup(rec)
+    FreeCAD.getDocument("Unnamed").getObject("Rectangle").MakeFace = True
+    cSca = ""
+    cLa  = ""
+    kClx= 1
+    kCsg= 3
+    nRibOffs  = 0
+  else:
+    cLa = "001"  # loft number
+    # for the outer segment the number of ribs of the 
+    # inner segment must be stored
+    wDat = rdWngDat(flName, 0)
+    nRibOffs  = int(wDat[7])
+    kCsg = 3
+    kClx = int(nRibOffs) + 1
+    if (kClx > 9):
+      cSca = "0" + str(nRibOffs)
+    else:
+      cSca = "00" + str(nRibOffs)
+    oF.write('wDat[7]  ' + str(wDat[7]) +'\n')
+  
+  
+  
+  
+  wDat = rdWngDat(flName, jB)
+  
+  cS2_ = "Common"
+  
+  bLocInr = wDat[0]  # 0=inner wing     1=outer wing
+  wSpan = wDat[1]  # 650
+  zInr  = wDat[2]  # 0.0
+  zOut  = wDat[3]  # 280
+  nRib  = wDat[7] + 1.0 # nRib is float to make division easy, 1.0 is added since range stops at n-1
+  zLen  = wDat[8]
+  
+  oF.write('bLocInr ' + str(bLocInr) +'\n') 
+  oF.write('wSpan   ' + str(wSpan  ) +'\n')
+  oF.write('zInr    ' + str(zInr   ) +'\n')
+  oF.write('zOut    ' + str(zOut   ) +'\n')
+  oF.write('zLen    ' + str(zLen   ) +'\n')
+  oF.write('kCsg    ' + str(kCsg   ) +'\n')
+  oF.write('nRib    ' + str(nRib   ) +'\n')
+  
+  oF.close()
+  
+  dZ = zLen/nRib
+  
+  zR = zInr + dZ
+  
+  oF= open('tmp.lis','w')
+  oF.write("nRibOffs " + str(nRibOffs) + "\n")
+  oF.write("cSca " + str(cSca) + "\n")
+  oF.write("kCsg " + str(kCsg) + "\n")
+  oF.write("kClx " + str(kClx) + "\n")
+  oF.flush()
+  
+  
+  for j in range(1,int(nRib)):
+    cSc = cS2_ + cSca   # common
+    # for the inner segment the clone counter starts 
+    # at 4 (i.e. kClx=2) because the base rib has been 
+    # cloned 4 times for root and tip rib of each segment
+    if (kClx+kCsg > 9):
+      cS1 = "Clone2D0" + str(kClx + kCsg)
+    else:
+      cS1 = "Clone2D00" + str(kClx + kCsg)
+  
+    oF.write(str(kClx) + '  cS1  ' + cS1 + '  cSc  ' + cSc + ' a ' + cSca + '    ' + str(zR) + '\n')
+    oF.flush()
+    Draft.clone(FreeCAD.ActiveDocument.Rectangle)
+  
+    FreeCAD.getDocument("Unnamed").getObject(cS1).Placement = App.Placement(App.Vector(-15,-20,zR),App.Rotation(App.Vector(0,0,1),0))
+    App.activeDocument().addObject("Part::MultiCommon",cSc)
+    jStp=0
+    csL = "Loft" + cLa
+    exec("App.activeDocument()." + cSc + ".Shapes = [App.activeDocument()." + cS1 + ", App.activeDocument()." + csL + ",]")
+    zR = zR + dZ
+    if (kClx > 9):
+      cSca = "0" + str(kClx)
+    else:
+      cSca = "00" + str(kClx)
+  
+    kClx=kClx+1
+  
+    App.ActiveDocument.recompute()
+    jStp=0
+
+
+oF.close()

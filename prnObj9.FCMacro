@@ -1,0 +1,82 @@
+import FreeCAD
+import Part
+import TechDraw
+from utilFCD2 import rdObjDat2
+
+docName='mplSdWin1'
+docName='SD7034_wng9'
+docName='SDtwinMplWng2'
+docName='SD7034_wng9_wb'
+
+
+App.setActiveDocument(docName)
+
+App.activeDocument().addObject('TechDraw::DrawPage', 'Page')
+App.activeDocument().addObject('TechDraw::DrawSVGTemplate', 'Template')
+App.activeDocument().Template.Template = "/usr/share/freecad/Mod/TechDraw/Templates/A2_Landscape_blank.svg"
+App.activeDocument().Page.Template = App.activeDocument().Template
+App.ActiveDocument.recompute()
+
+objList = FreeCAD.ActiveDocument.Objects
+
+# in the first run set kB=1 and generate a list of all objects in the model
+# open the file and select the ribs from tip to root one after another
+# write consecutive numbers behind each objekt in the objcts9.lis file and
+# save it as prnObjctsList9.lis. 
+# for the second run set kB = -1. This second run places all ribs on an svg
+# page. Unfortunately I did not find a way to assign the colour red rgb=FF0000
+# to the rib contours so this has to be done manually if you want to generate
+# an input File for a laser cutter
+kB = -1
+if kB > 0:
+  oF = open('/home/jhumt/Flight/RotorCraft/Profiles/objcts9.lis','w')
+  for k in range(len(objList)):
+    obj = objList[k]
+    oF.write(str(k) + '   ' + obj.FullName + '\n')
+
+  oF.close()
+
+
+
+else:
+  fName = "/home/jhumt/Flight/RotorCraft/Profiles/prnObjctsList9.lis"
+  objNumLst = rdObjDat2(fName)
+
+  doc = FreeCAD.ActiveDocument
+  page = doc.getObject('Page')
+  
+  vW = "View00"
+  vNm ="View"
+  
+  m=0
+  dY   = 20
+  dYsm =  0
+  xA   = 70  
+  dXa  = 3.5
+
+  for k in range(1,len(objNumLst)):
+    view = doc.addObject("TechDraw::DrawViewPart", vNm)
+    page.addView(view)
+    view.Source = [objList[objNumLst[k][1]]]
+    doc.getObject(vNm).Direction = (0, 0, 1)
+    FreeCAD.getDocument(docName).getObject(vNm).XDirection = (0, 0, 1)
+    FreeCAD.getDocument(docName).getObject(vNm).X = xA
+    FreeCAD.getDocument(docName).getObject(vNm).Y = 380 - dYsm
+  #  FreeCAD.getDocument("SD7034_wng2").getObject(vNm).LineColor = (255.00,0.00,0.00)
+    doc.commitTransaction()
+    FreeCAD.getDocument(docName).getObject(vNm).recompute()
+    
+    m=m+1
+    xA = xA + dXa
+    dYsm = dYsm + dY
+
+    if (k == 10):
+      vW= "View0"
+      xA = 230
+      dXa  = 0 
+      dYsm = 0
+
+    vNm = vW + str(k)
+
+k=0
+
