@@ -24,10 +24,10 @@ Thus the sequence to generate a wing and a drawing is:
   modify the path in the macros.
 - define the wing geometry in wDat19928.lis 
 - start FreeCAD 18 and create a new file, which will
-  be called "unnamed" (without quotes). Now run the
+  be called "unnamed" (without quotes). Now run the  
   mkRibAutoStrt9.FCMacro                           -> inner and outer wing lofts are generated
-- save the file and load it in FreeCAD 21.x and    -> wing ribs are generated
-  run mkRibAuto9.FCMacro
+- save the file and load it in FreeCAD 21.x and  
+  run mkRibAuto9.FCMacro                           -> wing ribs are generated      
 - edit prnObj9.FCMacro, set kB to 1 (or any value > 0) 
   and give the name and path of the output file.
   Running prnObj9 will generate a list of all objects in 
