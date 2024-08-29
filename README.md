@@ -1,6 +1,6 @@
 FreeCADwing is an open source software distributed under GPL v3. Read inside the files or read the GPL file which you find in the project.
 
-FreeCADwing is a sequence of macros for FreeCAD that allow you to generate a tapered wing, the wing ribs and place the ribs in a drawing which you can export as an svg file to create e.g. the input for a laser cutter. You have to recolour the rib edges manually to red RGB = [255,0,0] for a laser cutter. The wing has an inner section, where the root profile is different from the outer profile of this section and an outer section which tapers towards the wing tip.
+FreeCADwing is a sequence of macros for FreeCAD that allow you to generate a two section tapered wing, as well as the wing ribs and then place the ribs in a drawing which you can export as an svg file to create e.g. the input for a laser cutter. You have to recolour the rib edges manually to red RGB = [255,0,0] for a laser cutter. The wing has an inner section, where the root profile is different from the outer profile of this section and an outer section which tapers towards the wing tip.
 
 First define the wing geometry in file wDat19928.lis (the filename is, of course, arbitrary), it contains the data for both the inner and outer wing section. Line 0, the first line, is no longer used. Outer wing data start in line 8, after the first nRig.
 
