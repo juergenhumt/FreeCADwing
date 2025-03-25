@@ -2,39 +2,49 @@
 
 FreeCADwing is a sequence of macros for FreeCAD that allow you to generate a tapered wing, the wing ribs and place the ribs in a drawing which you can export as an svg file to create e.g. the input for a laser cutter. You have to recolour the rib edges manually to red RGB = [255,0,0] for a laser cutter
 
-First define the defining the wing geometry in file wDat19928.lis (filename is, of course, arbitrary), it contains the data for both inner and outer wing section. Line 0, the first line, is no longer used. Outer wing data start in line 8, after the first nRig.
+First define the wing geometry in file wDat19928.lis (filename is, of course, arbitrary), it contains the data for both inner and outer wing section. Line 0, the first line, is no longer used. Outer wing data start in line 8, after the first nRig.
 
-First some remarks concerning different versions. Currently there seem to be two options:
-a) To create the wing you have to run the macro mkRibAutoStrt9.FCMacro in freecad 18 because in higher versions the loft for the outer wing is not created, which in #18 works like a charm. This is quite annoying! Also all FreeCAD 18.x AppImages for me did not run in Debian 12 bookworm. My work around was to install the Windows version of FreeCAD 18.0 under wine. You can not work with the program, since the graphic window is blocked but you can run the mkRibAutoStrt9.FCMacro. The wing is generated all right. You can save the file, load it in e.g. FreeCAD 21 and proceed by runnig the other macros. 
+The program files are in a directory FreeCADwing, there ar two sub directories called data and ex1. The data subdirectory is used to exchange information between the the different parts of the program. It contains a binary file that stores the path of the current work directory and the current project name. ex1 is the work directory for the test case, you add other project sub directories for yor own porjects.
 
-b) use the latest development version. 
-With the version 0.22.0dev I was able to run all the macros, although the version seems to crash now and then.
-OS: Debian GNU/Linux 12 (bookworm) (GNOME/gnome)
-Word size of FreeCAD: 64-bit
-Version: 0.22.0dev.38553 (Git) AppImage
-Build type: Release
-Branch: main
-Hash: 59c1ccec3e6b70f56eeee8f94d361019b84bd850
-Python 3.11.9, Qt 5.15.13, Coin 4.0.2, Vtk 9.2.6, OCC 7.7.2
-Locale: English/United Kingdom (en_GB)
+FreeCADwing was tested using FreeCAD version 1.0.0
 
+A)    Run the Test
+To create the wing for the test case where the project name is MonoWingMk2
+- FreeCadWingStart.FCMacro -> generates the two wing sections and lofts the profiles
+  on my computer it took abour 2 to 3 minutes to generate the wing loft. If you delete
+  it though and rerun it only takes 2 or 3 seconds to generate the loft. I have no
+  idea why that is. Now run:
+- FreeCadMkRib.FCMacro     -> generates the ribs
+- FreeCadMkRib writes a file called obj<projName>.lis,
+  hence the file name is objMonoWingMk2.lis. In the 
+  general case you have to edit this file, see below
+- for the test case a modified file objMonoWingMk2_mod.lis 
+  has been provided, which is used in the next step, so now run
+- FreeCadPrn.FCMacro -> generates a plot of all wing ribs and 
+  saves the plot as an svg file.
 
+To get familiar with the obj files you might want to compare the objMonoWingMk2.lis and objMonoWingMk2_mod.files. 
 
-Thus the sequence to generate a wing and a drawing is:
-- place the macro and data files in some folder and
-  modify the path in the macros.
-- define the wing geometry in wDat19928.lis 
-- start FreeCAD 18 and create a new file, which will
-  be called "unnamed" (without quotes). Now run the
-  mkRibAutoStrt9.FCMacro                           -> inner and outer wing lofts are generated
-- save the file and load it in FreeCAD 21.x and    -> wing ribs are generated
-  run mkRibAuto9.FCMacro
-- edit prnObj9.FCMacro, set kB to 1 (or any value > 0) 
-  and give the name and path of the output file.
-  Running prnObj9 will generate a list of all objects in 
-  the wing file. In this exampel the file is objetcs9.lis
+B)    Use FreeCADwing for your own projects
+In the general case after the first two macros, before running FreeCadPrn.FCMacro, the file containing the objects has to be edited. Copy the obj<projName>.lis file to obj<projName>_mod.lis i.e. add _mod to the name of the object file. Open the file while you have opended your project model in FreeCAD 
+
+If the test case has generated the file MonoWingMk2.FCStd and the
+svg file .......svg you can
+sequence to generate a wing and a drawing is:
+- create a new sub directory for your project.
+- palce the profile data files there and the wing geometry
+  data file. Give the data file a name of your choice
+- modify the project name and the path to your work directory
+  in the macro FreeCadWingStart.FCMacro. This information will
+  be stored in data subdirectory in the binary file projData.lis 
+  and will be used by the other modules.
+- define the wing geometry in the wing geometry file, which,
+  for the test case, is called wDat19928.lis, then run
+- FreeCadWingStart.FCMacro -> generates the two wing sections and lofts the profiles, now run
+- FreeCadMkRib.FCMacro     -> generates the ribs and a file obj<prjName>.lis
 - make a copy of the object file generated in the previous
-  step and open it. Find the object names of the ribs by
+  step and modify the name to obj<prjName>_mod.list. Go to
+  FreeCAD and find the object names of the ribs by
   highlighting them from tip to root. Enter a number from
   1 to nRib in column 3 of your copied object file. Save the 
   file. The copied objet file now looks like prnObjList9.lis 

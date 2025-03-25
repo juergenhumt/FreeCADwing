@@ -1,0 +1,147 @@
+import FreeCAD
+from FreeCAD import Base
+import Draft
+import Part
+import _pickle as pickle
+import importAirfoilDAT
+from utilFCD2 import splitStr
+from utilFCD2 import rdWngDat
+
+# this FreeCadWing module generates the end ribs of the 
+# two wing sections and the surface by lofting the ribs
+#
+
+
+prjName = "MonoWingMk2"
+
+wkDir = '/home/jhumt/Flight/FreeCad/monoWing/ex1/'
+
+datFlName = 'wDat19928.lis'
+
+# profiles
+prfl1Name = "profile_SD7062-il.dat"
+prfl2Name = "profile_SD7032-099-88.dat"
+
+# set to +1 to write debug output
+infWrt = -1
+
+# ==== no changes below this line ======
+dataDir = '/home/jhumt/Flight/FreeCad/monoWing/data/'
+
+prfl1Name = wkDir + prfl1Name
+prfl2Name = wkDir + prfl2Name
+flName    = wkDir + datFlName
+
+
+# inner and outer wing are generated in a loop
+for jTst in range(2):
+
+    wDat = rdWngDat(flName, jTst)
+    
+    bLocInr = wDat[0]
+    wSpan = wDat[1]  
+    zInr  = wDat[2]  
+    zOut  = wDat[3]  
+    scFi  = wDat[4]  
+    scFo  = wDat[5]
+
+    # inner wing
+    if (jTst == 0):
+        
+        try:
+           App.setActiveDocument("Unnamed")
+        except Exception:
+           App.newDocument("Unnamed")	
+
+        App.setActiveDocument("Unnamed")
+        App.ActiveDocument=App.getDocument("Unnamed")
+        Gui.ActiveDocument=Gui.getDocument("Unnamed")
+        Gui.activeDocument().activeView().viewDefaultOrientation()
+
+        importAirfoilDAT.insert(u"/" + prfl1Name,"Unnamed")
+
+        sFo =  App.ActiveDocument.getObject("Wire")
+
+        if "Placement" in sFo.PropertiesList:
+            sfpl = sFo.Placement
+        sfpl_Points = sFo.Points
+        sfpl_closed = sFo.Closed
+
+        if infWrt > 0:
+          oF = open('out.lis','w')
+          oF.write('bLocInr ' + str(bLocInr) +'\n') 
+          oF.write('wSpan   ' + str(wSpan  ) +'\n')
+          oF.write('zInr    ' + str(zInr   ) +'\n')
+          oF.write('zOut    ' + str(zOut   ) +'\n')
+          oF.write('scFi    ' + str(scFi   ) +'\n')
+          oF.write('scFo    ' + str(scFo   ) +'\n')
+          
+          oF.flush()
+          
+          oF.write(str(sFo))
+          oF.write('\n\n')
+                      
+          oF.write('Points\n')
+          oF.write(str(sfpl_Points))
+          oF.close()
+
+        bs1 = Draft.makeBSpline(sfpl_Points)
+        cS2a1 = ""
+        cS2a2 = "001"
+
+        importAirfoilDAT.insert(u"/" + prfl2Name,"Unnamed")
+
+        sFo1 =  App.ActiveDocument.getObject("Wire001")
+
+        if "Placement" in sFo1.PropertiesList:
+            sfpl = sFo1.Placement
+        sfpl_Points = sFo1.Points
+        sfpl_closed = sFo1.Closed
+                
+        bs2 = Draft.makeBSpline(sfpl_Points)
+
+    else:
+        cS2a1 = "002"
+        cS2a2 = "003"
+    
+    if (jTst==0):
+        bs1 = FreeCAD.getDocument("Unnamed").getObject("BSpline")
+    else:
+        bs1 = FreeCAD.getDocument("Unnamed").getObject("BSpline001")
+    
+    cS2_ = "Clone2D"
+    cS21 = cS2_ + cS2a1
+    cS22 = cS2_ + cS2a2
+    
+    
+    
+    Gui.activateWorkbench("DraftWorkbench")
+    Draft.clone(bs1)
+    FreeCAD.getDocument("Unnamed").getObject(cS21).Placement = App.Placement(App.Vector(0,0,zInr),App.Rotation(App.Vector(0,0,1),0))
+    FreeCAD.getDocument("Unnamed").getObject(cS21).Scale = (scFi, scFi, 1.00)
+    
+    bs2 = FreeCAD.getDocument("Unnamed").getObject("BSpline001")
+
+    Draft.clone(bs2)
+    FreeCAD.getDocument("Unnamed").getObject(cS22).Placement = App.Placement(App.Vector(0,0,zOut),App.Rotation(App.Vector(0,0,1),0))
+    FreeCAD.getDocument("Unnamed").getObject(cS22).Scale = (scFo, scFo, 1.00)
+    
+    
+    #Gui.SendMsgToActiveView("ViewFit")
+    App.getDocument('Unnamed').addObject('Part::Loft','Loft')
+    exec("App.getDocument('Unnamed').ActiveObject.Sections=[App.getDocument('Unnamed')." + cS21 + ", App.getDocument('Unnamed')." + cS22 + ", ]")
+    App.getDocument('Unnamed').ActiveObject.Solid=True
+    App.getDocument('Unnamed').ActiveObject.Ruled=False
+    App.getDocument('Unnamed').ActiveObject.Closed=False
+    App.ActiveDocument.recompute()
+
+
+flName = wkDir + prjName + ".FCStd"
+App.getDocument("Unnamed").saveAs(u"/" + flName)
+
+prjFname = dataDir + 'prjData.dat'
+prjF = open(prjFname,'wb')
+
+prjData={"prjName": prjName, "wkDir": wkDir, "datFlName": datFlName}
+pickle.dump(prjData, prjF)
+prjF.close()

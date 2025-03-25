@@ -1,0 +1,12 @@
+1     0=inr wng    1= out wng    0
+650   wSpan                      1  
+  0   zInr                       2   
+280   zOut                       3
+180   scFi  inner wing chord     4 
+180   scFo  outer wing chord     5 
+0     ddl   angle of dihedral    6 
+6     nRib  number of ribs between root and tip of segment
+180   scFi  inner wing chord     8
+90    scFo  outer wing chord     9
+0     ddlo  outer angle of dihedral  10
+8     nRib  number of ribs between root and tip of segment
