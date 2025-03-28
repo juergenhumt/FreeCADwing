@@ -47,9 +47,10 @@ sequence to generate a wing and a drawing is:
   FreeCAD and find the object names of the ribs by
   highlighting them from tip to root. Enter a number from
   1 to nRib in column 3 of your copied object file. Save the 
-  file. The copied objet file now looks like prnObjList9.lis 
-- edit prnObj9.FCMacro by giving the name and path of the
-  object input file generated in the previous step, then
-  set kB to -1 and run prnObj9. This will generate a page
+  file. The copied objet file now looks like objMonoWingMk2_mod.lis 
+- now run FreeCadWingPrn.FCMacro, this will generate a page
   containing all ribs that had a number assigned to them
-  in the copy of the object file.
+  in the copy of the object file. You can export this page
+  to an svg file. If you want to use it as input to e.g. a
+  laser cutter you have to set the line colour manually to
+  rgb [0,0,255]
