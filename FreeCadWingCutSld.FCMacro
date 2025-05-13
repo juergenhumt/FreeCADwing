@@ -1,0 +1,221 @@
+# Copyright 2025 Juergen Humt
+# 
+# This file is part of FreeCADwing.
+# 
+#
+#     FreeCADwing, is free  software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by the 
+#     Free Software Foundation, either version 3 of the License or any later 
+#     version.
+# 
+#     FreeCADwing is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License along 
+#     with FreeCADwing.  If not, see <http://www.gnu.org/licenses/>.
+#
+#     version v2.0.0
+#
+
+
+import Draft
+from BOPTools import BOPFeatures
+from math import tan, atan, degrees, radians, sqrt
+import _pickle as pickle
+from wngUtil import clltRib
+
+
+apcP = App.Console.PrintMessage
+
+
+dataDir = '/home/jhumt/Flight/FreeCad/monoWing/data/'
+
+prjFname  = 'prjData.dat'
+prjFlName = dataDir + prjFname
+
+firstrunDICT = True
+if firstrunDICT:
+  prjF = open(prjFlName,'rb')
+  prjData = pickle.load(prjF)
+  prjF.close()
+
+prjName = prjData["prjName"]
+wkDir   = prjData["wkDir"]
+datFlName = wkDir + prjData["datFlName"]
+
+
+doc = App.ActiveDocument
+if not doc:
+  docName2 = wkDir + prjName + ".FCStd"    
+  App.openDocument(docName2)
+  doc = App.ActiveDocument
+
+
+
+scDat, cList, rDat = clltRib(App,4,5,3.5)
+
+l1 = len(scDat)-1
+
+ribN = cList[0]
+ribK = cList[l1]
+rkNm = ribK.FullName
+
+
+zM = ribK.Shape.CenterOfGravity[2]
+outStr=f'l1 {l1:3d}  {rkNm:s} zM {zM:8.3f}\n'
+apcP(outStr)
+
+alf1 = rDat['alf1']
+fhi1 = radians(90-alf1)
+alf2 = rDat['alf2']
+x0 = rDat['xMin']
+
+
+outStr=f'x0 {x0:9.5f} fhi1 {fhi1:8.5f}   alf1 {alf1:8.2f}\n'
+apcP(outStr)
+
+datFlName = wkDir + prjData["datFlName"]
+
+tRib=0.5
+cSld = []
+
+
+jT = 1
+if jT > 0:
+  for k in range(l1+1):
+    outStr=f'{k:3d}  {scDat[k][0]:s} \n'
+    apcP(outStr)
+    cShp = cList[k].Shape
+    
+    fExt = cShp.Faces[0]
+    
+    extV= App.Vector(0, 0, tRib)  # extrusion
+    
+    # Convert shell to solid
+    extruded_solid = Part.Solid(fExt.extrude(extV))
+    
+    # Create a new object in the document for the solid
+    extruded_obj = doc.addObject("Part::Feature", "ExtSld")
+    extruded_obj.Shape = extruded_solid
+    
+    cSld.append([extruded_obj,[cList[k].Name]])
+    
+    
+    apcP('FCD cut finished')
+
+    
+    l1= len(scDat)
+    
+
+  # the cutting plane is made slightly longer by dz to ensure
+  # that it actually cuts through the first and last rib
+  dz= 2.5; tLngr=5; tLngr2=0.5*tLngr
+  zLen = rDat['cMax'].EndPoint[2] + dz
+
+  rctn=doc.getObject('Rectangle')
+  rctn.Length = zLen + 2*dz  # the distance to the end of the rectangle is 
+  doc.recompute()
+
+  xOrg = rDat['xMin'] - zLen*tan(fhi1) + tLngr2
+  outStr=f'{fhi1:8.5f}   xOrg  {xOrg:8.2f}\n'
+  apcP(outStr)
+  rctShp = rctn.Shape.copy()
+
+  zOrg=zLen + dz
+  rctShp.Placement = App.Placement(App.Vector(xOrg+tLngr,-15,zOrg),App.Rotation(App.Vector(0,1,0),alf1))
+
+# Add rotated rectangle as a temporary object
+  rctRotObj = doc.addObject("Part::Feature", "cutPln1")
+  rctRotObj.Shape = rctShp
+
+
+  rctShp2 = rctn.Shape.copy()
+  rctShp2.Placement = App.Placement(App.Vector(xOrg-tLngr,-15,zOrg),App.Rotation(App.Vector(0,1,0),alf2))
+
+# Add rotated rectangle as a temporary object
+  rctRotObj2 = doc.addObject("Part::Feature", "cutPln2")
+  rctRotObj2.Shape = rctShp2
+
+jT = 1
+if jT > 0:
+  bp = BOPFeatures.BOPFeatures(App.activeDocument())  
+  for k in range(l1):
+    apcP( str(k) + ' cut  ' + cSld[k][0].Name +  '\n')
+    bp.make_multi_common([cSld[k][0].Name,"cutPln1", ])
+
+  for k in range(l1):
+    apcP( str(k) + ' cut  ' + cSld[k][0].Name +  '\n')
+    bp.make_multi_common([cSld[k][0].Name, "cutPln2", ])
+
+  App.ActiveDocument.recompute()
+
+  # the trailing edge is cut to accommodate the aileron
+  jA =  5  #  'Common006'  # rib where aileron starts
+  jB = 17  #  'Clone2D003'  #          "        ends (tip)
+  
+  tA = 0.25  # depth of aileron in % of profile 
+
+  xA = (1.0 - tA)*scDat[jA][2]; xB = (1.0 - tA)*scDat[jB][2]
+  zA = cList[jA].Shape.CenterOfMass[2]
+  zB = cList[jB].Shape.CenterOfMass[2]
+  
+  # xB is the tip profile 
+  fhiA = atan((xB-xA)/(zB - zA))
+  lAB = sqrt((xB-xA)**2 + (zB - zA)**2)
+
+  alf3 = 90 + degrees(fhiA)
+  outStr=f'xA {xA:8.2f}   xB {xB:8.2f}   zA {zA:8.2f}   zB {zB:8.2f}   lAB {lAB:8.2f}\n'
+  apcP(outStr)
+
+  rctn3 = Draft.make_clone(doc.Rectangle)
+  xOrg  = xB
+  outStr=f'{alf3:8.5f}   xOrg  {xOrg:8.2f}\n'
+  apcP(outStr)
+
+  rctShp3 = rctn.Shape.copy()
+  rctShp3.Placement = App.Placement(App.Vector(xOrg,-15,zOrg),App.Rotation(App.Vector(0,1,0),alf3))
+
+# Add rotated rectangle as a temporary object
+  rctRotObj3 = doc.addObject("Part::Feature", "cutPln3")
+  rctRotObj3.Shape = rctShp3
+
+  cLc = [17, 13, 12, 11, 10, 9, 8, 7, 6] 
+  for k in range(len(cLc)):
+    apcP( str(k) + ' cut  ' + cSld[cLc[k]][0].Name +  '\n')
+    bp.make_multi_common([cSld[cLc[k]][0].Name,"cutPln3", ])
+
+
+jT = 1
+if jT > 0:
+  rctn2 = Draft.make_clone(doc.Rectangle)
+  xOrg = xOrg + 2*tLngr2
+  outStr=f'{fhi1:8.5f}   xOrg  {xOrg:8.2f}\n'
+  apcP(outStr)
+  
+  # rctn2.Placement = App.Placement(App.Vector(xOrg,-15,zOrg),App.Rotation(App.Vector(0,1,0),alf1))
+  
+  # when the solids are cut the result is a rectangle inside the rib, where
+  # the longer edges are the sides of the profile, but the profile faces are
+  # not cut. Below one of the profile faces is being cut by these rectangles
+  for k in range(l1):
+    for lx in cSld[k][0].InList:
+      cSld[k][1].append(lx.Name)
+    apcP('##' + str(k) + '  ' + str(cSld[k][1]) + '\n')
+  
+  for k in range(l1):
+   cX=bp.make_cut([cSld[k][1][0],cSld[k][1][1], ])
+   cY=bp.make_cut([cX.Name,cSld[k][1][2], ])
+
+   if len(cSld[k][1]) > 3:
+     apcP('-#-#' + str(k) + '  ' + str(cSld[k][1]) + cY.Name + '\n')	
+     cZ=bp.make_cut([cY.Name,cSld[k][1][3], ])
+
+   apcP(cSld[k][1][0] + '  ' + cSld[k][1][1] + '  ' + cX.Name + '  ' + cSld[k][1][2] + '\n')
+  
+  # doc.save()
+  apcP('cut solid finished\n')
+
+
+App.ActiveDocument.recompute()

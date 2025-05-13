@@ -1,0 +1,159 @@
+# Copyright 2025 Juergen Humt
+# 
+# This file is part of FreeCADwing.
+# 
+#
+#     FreeCADwing, is free  software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by the 
+#     Free Software Foundation, either version 3 of the License or any later 
+#     version.
+# 
+#     FreeCADwing is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License along 
+#     with FreeCADwing.  If not, see <http://www.gnu.org/licenses/>.
+#
+#     version v2.0.0
+#
+
+import FreeCAD
+import Part
+import TechDraw
+import _pickle as pickle
+# this macro places all ribs on an svg page.
+
+apcP = App.Console.PrintMessage
+doc = App.ActiveDocument
+apcP = App.Console.PrintMessage
+
+
+dataDir = '/home/jhumt/Flight/FreeCad/monoWing/data/'
+
+prjFname  = 'prjData.dat'
+prjFlName = dataDir + prjFname
+
+firstrunDICT = True
+if firstrunDICT:
+  prjF = open(prjFlName,'rb')
+  prjData = pickle.load(prjF)
+  prjF.close()
+
+
+
+# prjData={"prjName": prjName, "wkDir": wkDir, "datFlName": datFlName}
+prjName = prjData["prjName"]
+wkDir   = prjData["wkDir"]
+datFlName = wkDir + prjData["datFlName"]
+
+
+oF = open('out.lis','w')
+
+doc = App.ActiveDocument
+if not doc:
+  docName2 = wkDir + prjName + ".FCStd"    
+  App.openDocument(docName2)
+  doc = App.ActiveDocument
+
+
+newDrwPg = 1
+if newDrwPg > 0:
+	# App.activeDocument().addObject('TechDraw::DrawPage', 'Page')
+	doc.addObject('TechDraw::DrawPage', 'Page')	
+	doc.addObject('TechDraw::DrawSVGTemplate', 'Template')
+	doc.Template.Template = "/usr/share/freecad/Mod/TechDraw/Templates/A3_Landscape_blank.svg"
+	doc.Page.Template = App.activeDocument().Template
+	doc.recompute()
+
+
+# Below, a list of all objects which are to be printed in this model is generated.
+# the objects to be printed are the cutXXX object, where XXX is the number behind
+# the word cut. The cuts have been created using FreeCadWingCut macro.
+# To generate a drawing of the ribs open the  *.FCStd file in FreeCAD and select 
+# the ribs from root to tip one after another to find their designation. Write 
+# the numbers to the list nObjLst, then run FreeCadWingPrnRib, which places all ribs 
+# on an svg page.
+# Unfortunately I did not find a way to assign the colour red rgb=FF0000 to the rib 
+# contours so assigning the color red to be done manually if you want to generate 
+# an input File for a laser cutter
+
+
+strA = 'Cut0'
+# the list below is created manually, you have to high light the ribs and enter the value in the list
+# note, that the sequence is also not the one in the model tree 
+#             0     1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    
+#        note that cut 39 and 41 are the two ribs located where the two sections meet, thus only 39 is printed
+nObjLst = [ '37', '01', '03', '05', '07', '09', '11', '39', '14', '17', '20', '23', '26', '29', '32', '35', '44'] 
+k=1
+fcObjNm = []
+for j in range(len(nObjLst)):
+  fcObjNm.append(strA + nObjLst[j])
+  outStr= f'§{j:03d}   {fcObjNm[j]:s}\n'
+  apcP(outStr)
+  k+=2
+  if k > 9:
+    strA='Cut0'
+
+page = doc.getObject('Page')
+
+vW  = "View"
+
+m=0
+dY   = 31
+dYsm =  0
+xA   = 100  
+dXa  = 3.5
+
+tL = 2	
+kY = 0
+
+
+
+for k in range(len(nObjLst)):
+  numStr = str(k)
+  vNm = vW + numStr
+  view = doc.addObject("TechDraw::DrawViewPart", vNm)
+  page.addView(view)
+  fcObj = doc.getObject(fcObjNm[k])
+  view.Source = fcObj
+  vObj= doc.getObject(vNm)
+  vObj.Direction = (0, 0, 1)
+  vObj.X = xA
+  yA = 255 - dYsm
+  vObj.Y = yA
+  vObj.recompute()
+  doc.commitTransaction()
+  antStr = 'a' + numStr
+  # antStr = 'Annotation018'
+  antObj=doc.addObject('TechDraw::DrawViewAnnotation', antStr)
+  doc.Page.addView(antObj)
+  doc.recompute()
+  antObj.Text = ["", ]
+  antObj.Label = numStr
+  antObj.X = xA -15
+  antObj.Y = yA + 5
+
+
+  m=m+1
+  xA = xA + dXa
+  dYsm = dYsm + dY - kY
+
+  if (1 == k):
+    dY = 26
+	
+  if (8==k):
+    xA = 280
+    dXa  = 0 
+    dYsm = -3
+    dY = 25
+
+  if k < 9:
+    kY += 1
+  else:
+    kY = 0
+	
+	
+  if (10==k):
+    dY = 15

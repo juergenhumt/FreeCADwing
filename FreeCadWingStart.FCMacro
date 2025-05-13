@@ -1,3 +1,25 @@
+# Copyright 2025 Juergen Humt
+# 
+# This file is part of FreeCADwing.
+# 
+#
+#     FreeCADwing, is free  software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by the 
+#     Free Software Foundation, either version 3 of the License or any later 
+#     version.
+# 
+#     FreeCADwing is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License along 
+#     with FreeCADwing.  If not, see <http://www.gnu.org/licenses/>.
+#
+#     version v2.0.0
+#
+
+
 import FreeCAD
 from FreeCAD import Base
 import Draft
@@ -14,7 +36,7 @@ from utilFCD2 import rdWngDat
 
 prjName = "MonoWingMk2"
 
-wkDir = '/home/jhumt/Flight/FreeCad/monoWing/ex1/'
+wkDir = '/home/jhumt/Flight/FreeCad/monoWing/ex2/'
 
 datFlName = 'wDat19928.lis'
 
